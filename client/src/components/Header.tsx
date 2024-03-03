@@ -1,11 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { AcademicCapIcon, SunIcon } from "@heroicons/react/16/solid";
 import { Button } from "../components/catalyst/button";
+import { Strong } from "./catalyst/text";
 import useDarkMode from "../hooks/useDarkMode";
 function Logo() {
     return (
         <div className="flex gap-2 ml-3">
-            <span className="text-black dark:text-white">GraphChat</span>
+            <Strong className="text-black dark:text-white">GraphChat</Strong>
             <div className="w-6 dark:invert">
                 <AcademicCapIcon />
             </div>

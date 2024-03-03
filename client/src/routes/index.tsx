@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Field } from "../components/catalyst/fieldset";
 import { Textarea } from "../components/catalyst/textarea";
 import { AcademicCapIcon } from "@heroicons/react/16/solid";
@@ -15,6 +15,11 @@ export const Route = createFileRoute("/")({
     component: IndexComponent,
 });
 
+export interface IContext {
+    title: string;
+    index: number;
+}
+
 export interface Document {
     title: string;
     content: string;
@@ -28,12 +33,15 @@ export interface DocumentWrapper {
 function IndexComponent() {
     const queryClient = useQueryClient();
     const [data, setData] = useState<DocumentWrapper[]>([]);
-    // const [context, setContext] = useState();
-
+    // This is the state that is sent to the chat page as search params
+    const [chatQuery, setChatQuery] = useState<string>("");
+    const [context, setContext] = useState<IContext[]>([]);
+    const searchParamContext = context.map((c) => c.title);
     // Hits our api for vector search similar documents
-    const fetchSimilarDocuments = async ({ queryKey }) => {
+    const fetchSimilarDocuments = async ({ queryKey }: any) => {
         const [_, query] = queryKey;
         const searchParams = new URLSearchParams(query).toString();
+        console.log(searchParams);
         const response = await fetch(
             `http://localhost:8080/embeddings?${searchParams}`
         );
@@ -44,13 +52,31 @@ function IndexComponent() {
     };
 
     const handleChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setContext([]);
         const query = e.target.value;
         const data = await queryClient.ensureQueryData({
             queryKey: ["embeddings", { query }],
             queryFn: fetchSimilarDocuments,
         });
+        setChatQuery(query); // TODO: I believe this is a react query antipattern.
         setData(data); // TODO: I believe this is a react query antipattern.
     };
+
+    const handleAddContext = (newContext: IContext, oldContext: IContext[]) => {
+        const toggleContext = oldContext.some(
+            (c) => c.index === newContext.index
+        );
+
+        if (toggleContext) {
+            const removedContext = oldContext.filter(
+                (c) => c.index !== newContext.index
+            );
+            setContext(removedContext);
+            return;
+        }
+        setContext([...oldContext, newContext]);
+    };
+
     return (
         <div className="flex flex-col items-center gap-12">
             <form>
@@ -66,20 +92,32 @@ function IndexComponent() {
                     </div>
                     <Textarea
                         onChange={handleChange}
-                        placeholder="Hi"
+                        placeholder="What is an Eulerian Graph?"
                         rows={6}
                         name="description"
                     />
                 </Field>
                 <Field className="mt-5 mr-1 flex justify-end">
-                    <Button color="green">
-                        <PaperAirplaneIcon /> Ask
-                    </Button>
+                    <Link
+                        to="/chat"
+                        search={{
+                            chatQuery: chatQuery,
+                            chatContext: searchParamContext,
+                        }}
+                    >
+                        <Button color="green">
+                            <PaperAirplaneIcon /> Ask
+                        </Button>
+                    </Link>
                 </Field>
             </form>
             <div className="w-2/3">
                 <ContextContainer>
-                    <Context data={data} />
+                    <Context
+                        handleAddContext={handleAddContext}
+                        context={context}
+                        data={data}
+                    />
                 </ContextContainer>
                 <Text className="text-wrap mx-auto text-center mt-3">
                     Ask GraphChat in the input box to see related documents

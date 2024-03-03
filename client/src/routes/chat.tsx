@@ -1,36 +1,51 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions } from "@tanstack/react-query";
 
-async function fetchSSECompletion(chatQuery: string) {
-    return chatQuery;
+interface SearchParams {
+    chatQuery: string;
+    chatContext: string[];
+}
+interface LoaderDepsParams {
+    search: SearchParams;
 }
 
-interface LoaderDepsParams {
-    search: {
-        chatQuery: string;
-    };
+async function fetchSSECompletion(chatQuery: string, chatContext: string[]) {
+    return new Promise((resolve) => {
+        resolve({ chatQuery, chatContext });
+    });
 }
 
 // This sets up a request on page load, calls the completion endpoint
-function chatQueryOptions(chatQuery: string) {
+function chatQueryOptions(chatQuery: string, chatContext: string[]) {
     return queryOptions({
         queryKey: ["chat", { chatQuery }],
-        queryFn: () => fetchSSECompletion(chatQuery),
+        queryFn: () => fetchSSECompletion(chatQuery, chatContext),
     });
 }
 
 // This uses the router in the Tanstack router context to hit the api with caching
 export const Route = createFileRoute("/chat")({
-    loader: ({ context: { queryClient }, deps: { chatQuery } }) =>
-        queryClient.ensureQueryData(chatQueryOptions(chatQuery)),
-    loaderDeps: ({ search: { chatQuery } }: LoaderDepsParams) => ({
+    loader: ({ context: { queryClient }, deps: { chatQuery, chatContext } }) =>
+        queryClient.ensureQueryData(chatQueryOptions(chatQuery, chatContext)),
+    loaderDeps: ({ search: { chatQuery, chatContext } }: LoaderDepsParams) => ({
         chatQuery,
+        chatContext,
     }),
 
     component: Chat,
 });
 
 function Chat() {
-    const chat = Route.useLoaderData();
-    return <div className="p-2">{chat}</div>;
+    const { chatQuery, chatContext }: SearchParams = Route.useLoaderData();
+    return (
+        <div className="p-2">
+            <p>Query: {chatQuery}</p>
+            <p>
+                Context:{" "}
+                {chatContext.map((x) => (
+                    <p>{x}</p>
+                ))}
+            </p>
+        </div>
+    );
 }
