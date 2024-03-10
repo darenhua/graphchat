@@ -7,9 +7,9 @@ import { PaperAirplaneIcon } from "@heroicons/react/20/solid";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../components/catalyst/button";
 import { Text } from "../components/catalyst/text";
-import { ThreeDots } from "react-loader-spinner";
 import ContextContainer from "../components/ContextContainer";
 import Context from "../components/Context";
+import { useDebounce } from "../hooks/useDebounce";
 
 export const Route = createFileRoute("/")({
     component: IndexComponent,
@@ -26,13 +26,9 @@ export interface Document {
     difficulty: string;
     related: string[];
 }
-export interface DocumentWrapper {
-    document: Document;
-}
 
 function IndexComponent() {
     const queryClient = useQueryClient();
-    const [data, setData] = useState<DocumentWrapper[]>([]);
     // This is the state that is sent to the chat page as search params
     const [chatQuery, setChatQuery] = useState<string>("");
     const [context, setContext] = useState<IContext[]>([]);
@@ -41,7 +37,6 @@ function IndexComponent() {
     const fetchSimilarDocuments = async ({ queryKey }: any) => {
         const [_, query] = queryKey;
         const searchParams = new URLSearchParams(query).toString();
-        console.log(searchParams);
         const response = await fetch(
             `http://localhost:8080/embeddings?${searchParams}`
         );
@@ -54,13 +49,14 @@ function IndexComponent() {
     const handleChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setContext([]);
         const query = e.target.value;
-        const data = await queryClient.ensureQueryData({
+        await queryClient.ensureQueryData({
             queryKey: ["embeddings", { query }],
             queryFn: fetchSimilarDocuments,
         });
-        setChatQuery(query); // TODO: I believe this is a react query antipattern.
-        setData(data); // TODO: I believe this is a react query antipattern.
+        setChatQuery(query);
     };
+
+    const debouncedHandleChange = useDebounce(handleChange);
 
     const handleAddContext = (newContext: IContext, oldContext: IContext[]) => {
         const toggleContext = oldContext.some(
@@ -91,7 +87,7 @@ function IndexComponent() {
                         </div>
                     </div>
                     <Textarea
-                        onChange={handleChange}
+                        onChange={debouncedHandleChange}
                         placeholder="What is an Eulerian Graph?"
                         rows={6}
                         name="description"
@@ -100,12 +96,13 @@ function IndexComponent() {
                 <Field className="mt-5 mr-1 flex justify-end">
                     <Link
                         to="/chat"
+                        preload={false}
                         search={{
                             chatQuery: chatQuery,
                             chatContext: searchParamContext,
                         }}
                     >
-                        <Button color="green">
+                        <Button disabled={chatQuery === ""} color="green">
                             <PaperAirplaneIcon /> Ask
                         </Button>
                     </Link>
@@ -116,13 +113,20 @@ function IndexComponent() {
                     <Context
                         handleAddContext={handleAddContext}
                         context={context}
-                        data={data}
+                        query={chatQuery}
                     />
                 </ContextContainer>
                 <Text className="text-wrap mx-auto text-center mt-3">
-                    Ask GraphChat in the input box to see related documents
-                    above. The documents you select will be used to support your
-                    answer.
+                    The documents you select will be used to support your
+                    answer. Made by{" "}
+                    <a
+                        className="underline hover:font-bold"
+                        target="_blank"
+                        href="https://www.linkedin.com/in/daren-hua/"
+                    >
+                        Daren Hua
+                    </a>{" "}
+                    to get into building with Language Models.
                 </Text>
             </div>
         </div>

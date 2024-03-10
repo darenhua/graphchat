@@ -1,28 +1,45 @@
 import { ThreeDots } from "react-loader-spinner";
-import { useIsFetching } from "@tanstack/react-query";
-import { DocumentWrapper, IContext } from "../routes/index.tsx";
+import { useQueryClient } from "@tanstack/react-query";
+import { Document, IContext } from "../routes/index.tsx";
 import { Strong } from "./catalyst/text";
 import DocumentSelect from "./DocumentSelect.tsx";
 
 interface ContextProps {
-    data: DocumentWrapper[];
+    query: string;
     context: IContext[];
     handleAddContext: (newContext: IContext, oldContext: IContext[]) => void;
 }
 
 export default function Context({
-    data,
+    query,
     context,
     handleAddContext,
 }: ContextProps) {
-    const isLoading = useIsFetching() !== 0;
+    const queryClient = useQueryClient();
+    const data: Document[] | undefined = queryClient.getQueryData([
+        "embeddings",
+        { query: query },
+    ]);
+    const isLoading = queryClient.isFetching() === 1;
 
     if (isLoading) {
         return <ThreeDots height="15" color="#16a34a" />;
     }
 
+    if (!data) {
+        return (
+            <Strong className="text-center w-2/3">
+                Start typing in the chatbox to see related documents here!
+            </Strong>
+        );
+    }
+
     if (data.length === 0) {
-        return <Strong>No results</Strong>;
+        return (
+            <Strong className="w-2/3 text-wrap  text-center break-words">
+                No results related to "{query}"
+            </Strong>
+        );
     }
     return (
         <div className="flex gap-2 items-stretch overflow-x-auto w-full h-full">
@@ -30,7 +47,7 @@ export default function Context({
                 <DocumentSelect
                     handleAddContext={handleAddContext}
                     context={context}
-                    document={doc.document}
+                    document={doc}
                     key={index}
                     index={index}
                 />
