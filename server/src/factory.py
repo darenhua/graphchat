@@ -20,7 +20,7 @@ from rag import RAGService
 
 class Factory:
     def __init__(self):
-        self.app = Flask(__name__)
+        self.app = Flask("app")
         CORS(self.app)
         db_uri = os.environ["MONGO_DB_URL"]
         self.mongo_client = MongoClient(db_uri)

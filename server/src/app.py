@@ -44,3 +44,7 @@ def embeddings():
     res.headers["Content-Type"] = "application/json"
 
     return res, 200
+
+
+if __name__ == "__main__":
+    app.run()
