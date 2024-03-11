@@ -1,3 +1,7 @@
+import os
+import sys
+
+sys.path.append(os.path.dirname(__file__))
 from factory import Factory
 from flask import request, Response, jsonify, stream_with_context, make_response
 from pydantic.json import pydantic_encoder
@@ -44,7 +48,3 @@ def embeddings():
     res.headers["Content-Type"] = "application/json"
 
     return res, 200
-
-
-if __name__ == "__main__":
-    app.run()

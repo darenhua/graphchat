@@ -1,0 +1,10 @@
+{
+    "dev": {
+        "app_function": "src.app.app",
+        "aws_region": "us-east-2",
+        "profile_name": "default",
+        "project_name": "server",
+        "runtime": "python3.11",
+        "s3_bucket": "zappa-graphchat"
+    }
+}

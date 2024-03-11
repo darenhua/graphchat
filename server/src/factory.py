@@ -1,3 +1,8 @@
+import os
+import sys
+
+sys.path.append(os.path.dirname(__file__))
+
 # Flask and Mongo
 from flask import Flask, jsonify
 from flask_cors import CORS
