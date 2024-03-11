@@ -1,3 +1,4 @@
+import instructor
 from models import Extraction
 
 
@@ -5,13 +6,16 @@ class CompletionService:
     def __init__(self, client):
         self.client = client
 
-    def getCompletion(self, prompt: str, context: str) -> Extraction:
+    def getCompletion(
+        self, prompt: str, context: str
+    ) -> instructor.Partial[Extraction]:
         content = f"CONTEXT: {context} PROMPT: {prompt}"
 
         # Using OpenAI Function Calling to make sure output is in the form Extraction.
         return self.client.chat.completions.create(
             model="gpt-3.5-turbo",
-            response_model=Extraction,
+            stream=True,
+            response_model=instructor.Partial[Extraction],
             max_retries=3,
             messages=[
                 {

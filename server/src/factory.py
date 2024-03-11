@@ -16,7 +16,6 @@ load_dotenv()
 from completion import CompletionService
 from repository import Repository
 from rag import RAGService
-from db.setup import DataCreator
 
 
 class Factory:
@@ -40,7 +39,3 @@ class Factory:
         repo = self.create_repo()
         completion = self.create_completion()
         return RAGService(repo, completion)
-
-    def create_datacreator(self):
-        repo = self.create_repo()
-        return DataCreator(self.instructor_client, repo)

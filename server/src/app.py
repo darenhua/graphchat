@@ -1,5 +1,5 @@
 from factory import Factory
-from flask import request, make_response
+from flask import request, Response, jsonify, stream_with_context, make_response
 from pydantic.json import pydantic_encoder
 import json
 
@@ -10,19 +10,33 @@ rag = factory.create_rag()
 
 @app.route("/")
 def main():
-    query = request.args.get("query", "")
+    return jsonify({"msg": "Health check good!"}), 200
 
-    extractions = rag.processQuery(query)
 
-    res = make_response(extractions.model_dump_json())
-    res.headers["Content-Type"] = "application/json"
+@stream_with_context
+@app.route("/completion")
+def completion():
+    query = request.args.get("query")
+    context = request.args.getlist("context")
 
-    return res, 200
+    extractions = rag.processQuery(query, context=context)
+
+    def eventStream():
+        for chunk in extractions:
+            chunk_json = chunk.model_dump_json()
+            yield f"event:message\ndata: {chunk_json}\n\n"
+        yield "event: end\ndata: stream\n\n"
+
+    return Response(eventStream(), mimetype="text/event-stream")
+    # res = make_response(eventStream())
+    # res.headers["mimetype"] = "text/event-stream"
+
+    # return res, 200
 
 
 @app.route("/embeddings")
 def embeddings():
-    query = request.args.get("query", "")
+    query = request.args.get("query")
 
     retrievedDocs = rag.processEmbedding(query)
 

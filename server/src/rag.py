@@ -3,6 +3,7 @@ from numpy.linalg import norm
 
 from typing import List
 
+import instructor
 from pydantic import BaseModel, Field
 from models import DAO, Extraction
 
@@ -16,18 +17,13 @@ class RAGOutput(BaseModel):
     extraction: Extraction
 
 
-class EmbeddingsOutput(BaseModel):
-    documents: List[DAO]
-    content: str
-
-
 class RAGService:
     def __init__(self, repositoryService, completionService):
         self.repository = repositoryService
         self.completion = completionService
         self.documents = repositoryService.getAll()
 
-    def retrieveDocuments(self, queryEmbedding) -> List[SimilarDocument]:
+    def retrieveDocumentsByEmbedding(self, queryEmbedding) -> List[DAO]:
         threshold = 0.5
         similarities = [
             SimilarDocument(
@@ -41,27 +37,34 @@ class RAGService:
         filteredDocs = list(
             filter(lambda doc: doc.similarityScore > threshold, similarities)
         )
-        print(filteredDocs)
+        return [sDoc.document for sDoc in filteredDocs]
+
+    def retrieveDocumentsByNames(self, titles: List[str]) -> List[DAO]:
+        filteredDocs = list(filter(lambda doc: doc.title in titles, self.documents))
         return filteredDocs
 
     def generateResponse(
-        self, query: str, retrievedDocs: List[SimilarDocument]
-    ) -> Extraction:
+        self, query: str, retrievedDocs: List[DAO]
+    ) -> instructor.Partial[Extraction]:
         context = " ".join(
-            [doc.document.content for doc in retrievedDocs]
+            [doc.content for doc in retrievedDocs]
         )  # TODO: Many improvements here!
         response = self.completion.getCompletion(query, context)
         return response
 
-    def processQuery(self, query: str) -> RAGOutput:
-        embedding = self.completion.getEmbeddings(query)
-        chosenDocs = self.retrieveDocuments(embedding)
-        extraction: Extraction = self.generateResponse(query, chosenDocs)
-        return RAGOutput(extraction=extraction)
+    def processQuery(self, query: str, context=None) -> instructor.Partial[Extraction]:
+        # if no context, do retrieval
+        if context:
+            embedding = self.completion.getEmbeddings(query)
+            documents = self.retrieveDocumentsByEmbedding(embedding)
+        else:
+            documents = self.retrieveDocumentsByNames(context)
 
-    def processEmbedding(self, query: str) -> EmbeddingsOutput:
+        return self.generateResponse(query, documents)
+
+    def processEmbedding(self, query: str) -> List[DAO]:
         embedding = self.completion.getEmbeddings(query)
-        chosenDocs = self.retrieveDocuments(embedding)
+        chosenDocs = self.retrieveDocumentsByEmbedding(embedding)
         return chosenDocs
 
     def cosineSimilarity(self, A, B):
