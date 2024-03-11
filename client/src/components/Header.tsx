@@ -20,7 +20,11 @@ function Socials() {
 
     return (
         <div className="flex items-center gap-6 mr-6">
-            <a href="" className="w-fit h-fit">
+            <a
+                href="https://github.com/darenhua/graphchat"
+                target="_blank"
+                className="w-fit h-fit"
+            >
                 <img
                     className="h-5 dark:invert"
                     src="github-mark.svg"

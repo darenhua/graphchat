@@ -19,7 +19,7 @@ export default function DocumentSelect({
     const newContext = { title: document.title, index };
     const isChecked = context.some((c) => c.index === index);
     return (
-        <div className="min-w-96 w-96 h-full py-3 px-4 ">
+        <div className="min-w-96 w-96 max-h-52 -xs:min-w-72 -xs:w-72 h-full py-3 px-4 ">
             <div
                 onClick={() => handleAddContext(newContext, context)}
                 className={`${isChecked ? "bg-green-200 dark:bg-green-900" : "bg-zinc-200 dark:bg-zinc-800"} cursor-pointer  p-3 max-h-full rounded-md flex flex-col`}

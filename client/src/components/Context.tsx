@@ -42,7 +42,7 @@ export default function Context({
         );
     }
     return (
-        <div className="flex gap-2 items-stretch overflow-x-auto w-full h-full">
+        <div className="flex gap-2 items-stretch overflow-x-auto w-full h-full -md:flex-col -md:overflow-y-auto -md:items-center">
             {data.map((doc, index) => (
                 <DocumentSelect
                     handleAddContext={handleAddContext}

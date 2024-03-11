@@ -23,6 +23,9 @@ export default {
 
                 "-sm": { max: "639px" },
                 // => @media (max-width: 639px) { ... }
+
+                "-xs": { max: "475px" },
+                // => @media (max-width: 475px) { ... }
             },
         },
     },

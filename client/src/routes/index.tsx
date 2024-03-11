@@ -38,7 +38,7 @@ function IndexComponent() {
         const [_, query] = queryKey;
         const searchParams = new URLSearchParams(query).toString();
         const response = await fetch(
-            `http://localhost:8080/embeddings?${searchParams}`
+            `${import.meta.env.VITE_API_URL}/embeddings?${searchParams}`
         );
         if (!response.ok) {
             throw new Error("Network response was not ok");
@@ -76,7 +76,7 @@ function IndexComponent() {
     return (
         <div className="flex flex-col items-center gap-12">
             <form>
-                <Field className="w-96 h-auto">
+                <Field className="w-96 -xs:w-72 h-auto">
                     <div className="flex gap-2 items-center justify-center mt-12 mb-10">
                         <h2 className="font-extrabold text-3xl dark:text-white">
                             Ask GraphChat.
@@ -108,7 +108,7 @@ function IndexComponent() {
                     </Link>
                 </Field>
             </form>
-            <div className="w-2/3">
+            <div className="w-2/3 -sm:w-96 -xs:w-72">
                 <ContextContainer>
                     <Context
                         handleAddContext={handleAddContext}

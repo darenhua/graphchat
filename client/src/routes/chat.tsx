@@ -34,34 +34,30 @@ function Chat() {
     params.append("query", chatQuery || "");
     chatContext.forEach((item) => params.append("context", item));
     const searchParams = params.toString();
-    const url = `http://localhost:8080/completion?${searchParams}`;
-
+    const url = `${import.meta.env.VITE_API_URL}/completion?${searchParams}`;
     const { closed, generateCount, triggerGenerate, stopGenerate, data } =
         useEventSourceQuery(url);
 
-    console.log("TESTING", data);
     return (
-        <div className="flex h-full">
-            <div className="w-3/4 p-6">
+        <div className="flex h-full -sm:flex-col ">
+            <div className="w-3/4 p-6 -lg:w-3/5 -sm:w-full -sm:min-h-[200px]">
                 <Strong className="text-xl">{data?.answer}</Strong>
             </div>
-            <div className="w-1/4 p-6 border-l-2 shadow-sm h-full min-h-screen border-gray-200">
+            <div className="w-1/4 -lg:w-2/5 p-6 -sm:w-full -sm:border-l-0 -sm:border-t-2 border-solid border-l-2 shadow-sm h-full -sm:min-h-0 min-h-screen border-gray-200">
                 <div>
-                    <Strong className="text-lg leading-loose">
-                        GraphChat is answering:
-                    </Strong>
-                    <Text className="break-words">{chatQuery}</Text>
+                    <Strong className="text-lg">GraphChat is answering:</Strong>
+                    <Text className="break-word mt-2">{chatQuery}</Text>
                 </div>
                 <div className="mt-8">
-                    <Strong className="text-lg leading-loose">
-                        Answers will reference:
-                    </Strong>
+                    <Strong className="text-lg">Answers will reference:</Strong>
                     {chatContext.length === 0 && (
-                        <Text>No Documents Selected</Text>
+                        <Text className="mt-2">No Documents Selected</Text>
                     )}
-                    <div>
-                        {chatContext.map((contextItem: string) => (
-                            <Badge color="green">{contextItem}</Badge>
+                    <div className="mt-2">
+                        {chatContext.map((contextItem: string, id: number) => (
+                            <Badge key={id} className="mr-1 mb-1" color="green">
+                                {contextItem}
+                            </Badge>
                         ))}
                     </div>
                 </div>
@@ -81,8 +77,8 @@ function Chat() {
                         </Button>
                     )}
 
-                    <Text className="mt-3">
-                        You have {5 - generateCount} regenerations remaining
+                    <Text className="mt-3 font-bold">
+                        You have {5 - generateCount} regenerations remaining.
                     </Text>
                 </div>
             </div>
